@@ -237,6 +237,18 @@
   font-family: ui-monospace, Consolas, monospace;
 }
 
+/* Black overlay fades in over the last 40vh of the game section —
+   creates a smooth cut-to-black before the boot screen takes over */
+.game-sticky-frame::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: #000;
+  opacity: var(--game-exit, 0);
+  pointer-events: none;
+  z-index: 30;
+}
+
 .game-hud {
   position: absolute;
   top: 32px;
@@ -382,7 +394,7 @@
    ================================================================ */
 
 .screen-boot {
-  height: 150vh;
+  height: 100vh;
   background: #000;
 }
 
@@ -399,8 +411,8 @@
   font-family: ui-monospace, Consolas, 'Courier New', monospace;
 }
 
-/* ---- Boot lines appear one by one via --boot-p + --bl (line index 0-7) ---- */
-/* Each line threshold: 0.05 * (bl+1), so line 0 at 0.05, line 7 at 0.40 */
+/* ---- Boot lines appear one by one via --boot-p + --bl (line index 0-5) ---- */
+/* Each line threshold: 0.07 * (bl+1), line 0 at 0.07 ... line 5 at 0.42 */
 .boot-terminal {
   display: flex;
   flex-direction: column;
@@ -416,10 +428,9 @@
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
-  /* opacity & slide driven by --boot-p crossing threshold (0.07 * (--bl + 1)) */
-  opacity: clamp(0, calc((var(--boot-p, 0) - calc(0.06 * (var(--bl, 0) + 1))) * 30), 1);
+  opacity: clamp(0, calc((var(--boot-p, 0) - calc(0.07 * (var(--bl, 0) + 1))) * 30), 1);
   transform: translateX(calc(
-    (1 - clamp(0, calc((var(--boot-p, 0) - calc(0.06 * (var(--bl, 0) + 1))) * 30), 1)) * -20px
+    (1 - clamp(0, calc((var(--boot-p, 0) - calc(0.07 * (var(--bl, 0) + 1))) * 30), 1)) * -20px
   ));
 }
 
@@ -431,7 +442,9 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  opacity: clamp(0, calc((var(--boot-p, 0) - calc(0.06 * (var(--bl, 0) + 1))) * 30), 1);
+  /* appears at boot-p = 0.47, after last log line */
+  opacity: clamp(0, calc((var(--boot-p, 0) - 0.47) * 25), 1);
+  transform: translateX(calc((1 - clamp(0, calc((var(--boot-p, 0) - 0.47) * 25), 1)) * -20px));
 }
 
 .boot-bar-label {
@@ -450,7 +463,7 @@
   overflow: hidden;
 }
 
-/* Fill driven by --boot-p mapped from 0.45 → 0.85 */
+/* Fill driven by --boot-p mapped from 0.50 → 0.83 (fills while bar is visible) */
 .boot-bar-fill {
   position: absolute;
   inset: 0;
@@ -462,46 +475,37 @@
     #003300 12px
   );
   transform-origin: left;
-  transform: scaleX(clamp(0, calc((var(--boot-p, 0) - 0.42) / 0.43), 1));
+  transform: scaleX(clamp(0, calc((var(--boot-p, 0) - 0.50) / 0.33), 1));
   box-shadow: 0 0 10px #00ff41;
 }
 
 .boot-bar-pct {
   font-size: clamp(10px, 1.2vw, 13px);
   color: #00ff41;
-  min-width: 42px;
+  min-width: 48px;
   text-align: right;
-  counter-reset: pct clamp(0, round(calc((clamp(0, calc((var(--boot-p, 0) - 0.42) / 0.43), 1)) * 100), 1), 100);
+  font-variant-numeric: tabular-nums;
 }
 
-/* ---- Complete line pulses ---- */
+/* ---- Complete line — own opacity threshold, blinks once fully visible ---- */
 .boot-complete {
   color: #00ff41 !important;
   text-shadow: 0 0 8px #00ff41;
-  animation: boot-pulse 0.8s step-end infinite;
+  /* override the --bl formula from .boot-line */
+  opacity: clamp(0, calc((var(--boot-p, 0) - 0.88) * 40), 1) !important;
+  transform: none !important;
+  animation: boot-pulse 0.7s step-end infinite;
   animation-play-state: paused;
+}
+
+/* Activate blink only after boot-terminal gets the --done modifier */
+.boot-terminal--done .boot-complete {
+  animation-play-state: running;
 }
 
 @keyframes boot-pulse {
   0%, 100% { opacity: 1; }
-  50%       { opacity: 0; }
-}
-
-/* Play the blink only once boot-p is near 1 (complete line visible) */
-.boot-complete[style] {
-  animation-play-state: running;
-}
-
-/* ---- Wipe overlay: transparent until boot is done, then fades to black
-        then the pixel section takes over with its own bg ---- */
-.boot-wipe {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  /* at 0.88+ boot-p we fade in a solid green flash then to black */
-  background: #000;
-  opacity: clamp(0, calc((var(--boot-p, 0) - 0.88) * 9), 1);
-  z-index: 20;
+  50%       { opacity: 0.3; }
 }
 
 /* ================================================================
@@ -691,3 +695,61 @@
   }
 }
 
+/* ================================================================
+   SPRITE CHARACTER
+   ================================================================ */
+
+.sprite {
+  position: absolute;
+  left: 0;
+  top: 0;
+  /* JS overrides this transform every frame */
+  transform: translate(100px, 500px);
+  width: 80px;
+  height: 120px;
+  z-index: 10;
+  pointer-events: none;
+  image-rendering: pixelated;
+  /* fades in alongside the pixel content */
+  opacity: clamp(0, calc((var(--pixel-p, 0) - 0.5) * 8), 1);
+}
+
+.sprite img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+/* Card flashes yellow when the sprite head makes contact */
+.pixel-card--hit {
+  border-color: #ffcc00 !important;
+  box-shadow: 4px 4px 0 0 #ffcc00, 0 0 20px rgba(255, 204, 0, 0.5) !important;
+  animation: card-hit 0.1s steps(1) 8;
+}
+
+@keyframes card-hit {
+  0%, 100% { background: #0d0d0d; }
+  50%       { background: #181800; }
+}
+
+/* Arrow-key controls hint */
+.sprite-hint {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  color: rgba(0, 255, 65, 0.38);
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: clamp(0, calc((var(--pixel-p, 0) - 0.5) * 8), 1);
+  animation: hint-pulse 2s step-end infinite;
+}
+
+@keyframes hint-pulse {
+  0%, 60%, 100% { opacity: clamp(0, calc((var(--pixel-p, 0) - 0.5) * 8), 0.38); }
+  80%            { opacity: clamp(0, calc((var(--pixel-p, 0) - 0.5) * 8), 0.7); }
+}
