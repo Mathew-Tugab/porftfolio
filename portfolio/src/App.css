@@ -533,6 +533,24 @@
   image-rendering: pixelated;
 }
 
+/* Pixel floor strip — character walks on this */
+.pixel-sticky-frame::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: repeating-linear-gradient(
+    90deg,
+    #00ff41 0px, #00ff41 8px,
+    #003300 8px, #003300 12px
+  );
+  opacity: 0.75;
+  pointer-events: none;
+  z-index: 2;
+}
+
 /* CRT scanline over entire section */
 .pixel-scanline {
   position: absolute;
@@ -576,8 +594,8 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  padding: 24px 0;
+  justify-content: flex-start;
+  padding: 16px 0 0;
 }
 
 .pixel-label {
@@ -594,6 +612,7 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 16px;
+  margin-top: 96px;
   margin-bottom: 32px;
 }
 
@@ -703,15 +722,27 @@
   position: absolute;
   left: 0;
   top: 0;
-  /* JS overrides this transform every frame */
-  transform: translate(100px, 500px);
-  width: 80px;
-  height: 120px;
+  width: 200px;
+  height: 200px;
   z-index: 10;
-  pointer-events: none;
   image-rendering: pixelated;
-  /* fades in alongside the pixel content */
   opacity: clamp(0, calc((var(--pixel-p, 0) - 0.5) * 8), 1);
+  transition: filter 0.1s step-end, outline 0.1s step-end;
+}
+
+/* Idle: dim + pointer to invite click */
+.sprite:not(.sprite--active) {
+  filter: brightness(0.65) saturate(0.7);
+}
+.sprite:not(.sprite--active):hover {
+  filter: brightness(0.85) saturate(0.9);
+}
+
+/* Controlled: full brightness + pixel outline */
+.sprite--active {
+  filter: brightness(1.1) drop-shadow(0 0 8px #00ff41);
+  outline: 2px solid #00ff41;
+  outline-offset: 4px;
 }
 
 .sprite img {
@@ -721,16 +752,19 @@
   display: block;
 }
 
-/* Card flashes yellow when the sprite head makes contact */
+/* Card bumps up briefly when sprite hits from below, then returns */
 .pixel-card--hit {
   border-color: #ffcc00 !important;
-  box-shadow: 4px 4px 0 0 #ffcc00, 0 0 20px rgba(255, 204, 0, 0.5) !important;
-  animation: card-hit 0.1s steps(1) 8;
+  box-shadow: 4px 4px 0 0 #ffcc00, 0 0 24px rgba(255, 204, 0, 0.55) !important;
+  animation: card-bump 0.35s steps(1) 2;
 }
 
-@keyframes card-hit {
-  0%, 100% { background: #0d0d0d; }
-  50%       { background: #181800; }
+@keyframes card-bump {
+  0%   { transform: translateY(0); }
+  25%  { transform: translateY(-8px); background: #1a1600; }
+  50%  { transform: translateY(-4px); background: #181000; }
+  75%  { transform: translateY(-8px); }
+  100% { transform: translateY(0); }
 }
 
 /* Arrow-key controls hint */

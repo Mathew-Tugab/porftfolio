@@ -19,7 +19,9 @@ export default function App() {
   const cardRefs      = useRef<(HTMLElement | null)[]>([null, null, null, null])
   const spriteRef     = useRef<HTMLDivElement>(null)
   const spriteGameRef = useRef<number | null>(null)
-  const spriteActiveRef = useRef(false)
+  const spriteActiveRef  = useRef(false)
+  const spriteControlled = useRef(false)
+  const [isControlled, setIsControlled] = useState(false)
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY)
@@ -92,15 +94,20 @@ export default function App() {
     return cleanup
   }, [bootState])
 
-  // Arrow-key listener: adds to keysRef, prevents page scroll when sprite is active
+  // Arrow-key + Space listener — only active when sprite is controlled
   useEffect(() => {
     const onDown = (e: KeyboardEvent) => {
-      if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
-        if (spriteActiveRef.current) e.preventDefault()
-        keysRef.current.add(e.key)
+      const isArrow = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)
+      const isSpace = e.code === 'Space'
+      if ((isArrow || isSpace) && spriteControlled.current) {
+        e.preventDefault()
+        keysRef.current.add(isSpace ? 'Space' : e.key)
       }
     }
-    const onUp = (e: KeyboardEvent) => keysRef.current.delete(e.key)
+    const onUp = (e: KeyboardEvent) => {
+      keysRef.current.delete(e.key)
+      if (e.code === 'Space') keysRef.current.delete('Space')
+    }
     window.addEventListener('keydown', onDown)
     window.addEventListener('keyup', onUp)
     return () => {
@@ -109,59 +116,103 @@ export default function App() {
     }
   }, [])
 
-  // RAF game loop — runs forever, sprite moves only when spriteActiveRef is true
+  // Lock scroll while controlling sprite so arrow keys / space don't move the page
   useEffect(() => {
-    let posX = -1, posY = -1, faceLeft = false
-    let lastHitTime = 0
-    const SPEED = 3, SW = 80, SH = 120
-    // Head hitbox relative to sprite top-left (sprite's head is in the top centre)
-    const HX = 20, HY = 2, HW = 40, HH = 38
+    if (!isControlled) return
+    const prevent = (e: Event) => e.preventDefault()
+    const preventKeys = (e: KeyboardEvent) => {
+      if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)) e.preventDefault()
+    }
+    window.addEventListener('wheel', prevent, { passive: false })
+    window.addEventListener('touchmove', prevent, { passive: false })
+    window.addEventListener('keydown', preventKeys, { capture: true })
+    return () => {
+      window.removeEventListener('wheel', prevent)
+      window.removeEventListener('touchmove', prevent)
+      window.removeEventListener('keydown', preventKeys, { capture: true })
+    }
+  }, [isControlled])
+
+  // RAF game loop — Mario-style platformer physics
+  useEffect(() => {
+    const s = { posX: -1, posY: -1, velX: 0, velY: 0, onGround: false, faceLeft: false, lastHitTime: 0, jumpHeld: false }
+    const GRAVITY = 0.7, JUMP_VEL = -20, WALK = 5, SW = 200, SH = 200
+    // Head hitbox: top-centre of 200x200 sprite container
+    const HX = 50, HY = 10, HW = 100, HH = 55
 
     const loop = () => {
       spriteGameRef.current = requestAnimationFrame(loop)
-      if (!spriteActiveRef.current) return
       const frame    = pixelFrameRef.current
       const spriteEl = spriteRef.current
       if (!frame || !spriteEl) return
 
       const fb = frame.getBoundingClientRect()
+      const FLOOR_Y = fb.height - SH - 6
 
-      // First-active-tick: spawn at bottom-centre
-      if (posX === -1) {
-        posX = fb.width / 2 - SW / 2
-        posY = fb.height - SH - 24
-        spriteEl.style.transform = `translate(${posX}px, ${posY}px)`
+      // Spawn at floor as soon as frame is available - visible before click
+      if (s.posX === -1) {
+        s.posX = 48
+        s.posY = FLOOR_Y
+        s.onGround = true
+        spriteEl.style.transform = `translate(48px, ${Math.round(FLOOR_Y)}px)`
+        return
+      }
+
+      // Idle: apply gravity only so sprite falls to floor if released mid-air
+      if (!spriteControlled.current) {
+        s.velY += GRAVITY
+        if (s.posY >= FLOOR_Y) { s.posY = FLOOR_Y; s.velY = 0; s.onGround = true }
+        spriteEl.style.transform = `translate(${Math.round(s.posX)}px, ${Math.round(s.posY)}px)`
+        return
       }
 
       const keys = keysRef.current
-      let dx = 0, dy = 0
-      if (keys.has('ArrowLeft'))  dx -= SPEED
-      if (keys.has('ArrowRight')) dx += SPEED
-      if (keys.has('ArrowUp'))    dy -= SPEED
-      if (keys.has('ArrowDown'))  dy += SPEED
 
-      if (dx !== 0 || dy !== 0) {
-        posX = Math.max(0, Math.min(fb.width  - SW, posX + dx))
-        posY = Math.max(0, Math.min(fb.height - SH, posY + dy))
-        if (dx < 0) faceLeft = true
-        else if (dx > 0) faceLeft = false
-        spriteEl.style.transform = `translate(${posX}px, ${posY}px)`
-        const imgEl = spriteEl.querySelector('img') as HTMLImageElement | null
-        if (imgEl) imgEl.style.transform = faceLeft ? 'scaleX(-1)' : ''
+      // Horizontal
+      s.velX = 0
+      if (keys.has('ArrowLeft'))  { s.velX = -WALK; s.faceLeft = true }
+      if (keys.has('ArrowRight')) { s.velX =  WALK; s.faceLeft = false }
+
+      // Jump — only trigger on fresh press (not hold)
+      const jumpPressed = keys.has('ArrowUp') || keys.has('Space')
+      if (jumpPressed && !s.jumpHeld && s.onGround) {
+        s.velY = JUMP_VEL
+        s.onGround = false
+      }
+      s.jumpHeld = jumpPressed
+
+      // Gravity
+      s.velY += GRAVITY
+
+      // Move
+      s.posX += s.velX
+      s.posY += s.velY
+
+      // Floor
+      if (s.posY >= FLOOR_Y) {
+        s.posY = FLOOR_Y
+        s.velY = 0
+        s.onGround = true
       }
 
-      // AABB collision: head box vs each card
+      // Walls
+      s.posX = Math.max(0, Math.min(fb.width - SW, s.posX))
+
+      // Head-bump detection — only while moving UPWARD (like Mario hitting a block from below)
       const now = Date.now()
-      if (now - lastHitTime > 800) {
-        const hx1 = fb.left + posX + HX
-        const hy1 = fb.top  + posY + HY
+      if (s.velY < 0 && now - s.lastHitTime > 600) {
+        const hx1 = fb.left + s.posX + HX
+        const hy1 = fb.top  + s.posY + HY
         const hx2 = hx1 + HW
         const hy2 = hy1 + HH
         cardRefs.current.forEach((card, idx) => {
           if (!card) return
           const cr = card.getBoundingClientRect()
           if (hx1 < cr.right && hx2 > cr.left && hy1 < cr.bottom && hy2 > cr.top) {
-            lastHitTime = now
+            // Bounce sprite back down; push below card bottom so no repeated triggers
+            s.velY = 8
+            s.posY = cr.bottom - fb.top - HY + 4
+            s.lastHitTime = now
             setHitCardIdx(idx)
             setTimeout(() => setHitCardIdx(prev => (prev === idx ? null : prev)), 700)
             const href = (card as HTMLElement).dataset.href
@@ -169,6 +220,12 @@ export default function App() {
           }
         })
       }
+
+      // Update DOM every frame
+      const bob = (s.velX !== 0 && s.onGround) ? (Math.floor(now / 120) % 2) * 2 : 0
+      spriteEl.style.transform = `translate(${Math.round(s.posX)}px, ${Math.round(s.posY + bob)}px)`
+      const img = spriteEl.querySelector('img') as HTMLImageElement | null
+      if (img) img.style.transform = s.faceLeft ? 'scaleX(-1)' : ''
     }
 
     spriteGameRef.current = requestAnimationFrame(loop)
@@ -182,7 +239,7 @@ export default function App() {
   const gameExit = Math.min(1, Math.max(0, (scrollY - vh * 2.8) / (vh * 0.4)))
   // pixel section: game(220vh) + boot(100vh) = 420vh = 4.2×vh
   const pixelProgress = Math.min(1, Math.max(0, (scrollY - vh * 4.2) / (vh * 0.8)))
-  // sprite activates once pixel content is fully on screen
+  // sprite activates (shows pointer events) once pixel content is on screen
   spriteActiveRef.current = pixelProgress > 0.5
 
   // Glow: deep blue → neon cyan
@@ -428,11 +485,26 @@ export default function App() {
             <p className="pixel-insert">INSERT COIN TO SEE MORE</p>
           </div>
 
-          {/* Arrow-key controllable sprite */}
-          <div ref={spriteRef} className="sprite" aria-hidden="true">
+          {/* Sprite — click to take control, click again to release */}
+          <div
+            ref={spriteRef}
+            className={`sprite${isControlled ? ' sprite--active' : ''}`}
+            style={{ pointerEvents: spriteActiveRef.current ? 'auto' : 'none', cursor: isControlled ? 'crosshair' : 'pointer' }}
+            onClick={() => {
+              const next = !spriteControlled.current
+              spriteControlled.current = next
+              setIsControlled(next)
+              keysRef.current.clear()
+            }}
+            aria-label={isControlled ? 'Click to release sprite control' : 'Click to control sprite'}
+          >
             <img src={spriteImg} alt="" draggable={false} />
           </div>
-          <p className="sprite-hint">&#x2191; &#x2193; &#x2190; &#x2192;&nbsp;&nbsp;MOVE &nbsp;&middot;&nbsp; HEAD-BUMP A PROJECT TO OPEN IT</p>
+          <p className="sprite-hint">
+            {isControlled
+              ? <>&#x2190; &#x2192;&nbsp; WALK &nbsp;&middot;&nbsp; &#x2191; / SPACE&nbsp; JUMP &nbsp;&middot;&nbsp; HEADBUTT BLOCK TO OPEN &nbsp;&middot;&nbsp; CLICK TO RELEASE</>
+              : <>CLICK SPRITE TO CONTROL</>}
+          </p>
         </div>
       </section>
 
