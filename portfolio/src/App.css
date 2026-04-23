@@ -237,6 +237,26 @@
   font-family: ui-monospace, Consolas, monospace;
 }
 
+/* Permanent gradient vignette — fades the bottom of the game frame to black
+   so there is never a hard seam between the game section and the pipe/boot below */
+.game-sticky-frame::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60%;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0, 0, 0, 0.25) 30%,
+    rgba(0, 0, 0, 0.7) 60%,
+    #000 100%
+  );
+  pointer-events: none;
+  z-index: 29;
+}
+
 /* Black overlay fades in over the last 40vh of the game section —
    creates a smooth cut-to-black before the boot screen takes over */
 .game-sticky-frame::after {
@@ -390,6 +410,186 @@
 }
 
 /* ================================================================
+   PIPE CUTSCENE OVERLAY
+   ================================================================ */
+
+.pipe-cutscene {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: #000;
+  opacity: 0;
+  pointer-events: none;
+  font-family: 'Press Start 2P', monospace;
+  /* smooth fade-in so the cutscene doesn't snap on */
+  transition: opacity 0.35s ease;
+  /* hide the pre-loaded scene completely when not active */
+  visibility: hidden;
+}
+
+.pipe-cutscene--active {
+  opacity: 1;
+  pointer-events: all;
+  visibility: visible;
+}
+
+/* Full 8-bit scene inside the overlay */
+.pipe-scene {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: #1a1a2e; /* night-sky blue */
+  overflow: hidden;
+  image-rendering: pixelated;
+}
+
+/* Pixel stars — just a repeating dot pattern for the sky */
+.pipe-scene::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(255,255,255,0.6) 1px, transparent 1px);
+  background-size: 48px 48px;
+  background-position: 0 0, 24px 24px;
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+/* Ground */
+.pipe-ground {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 80px;
+  background: repeating-linear-gradient(
+    90deg,
+    #3d8a3d 0px, #3d8a3d 32px,
+    #2d6b2d 32px, #2d6b2d 64px
+  );
+  border-top: 4px solid #5aad5a;
+  box-shadow: inset 0 8px 0 0 #4fa84f;
+}
+
+/* Pipe body — centred, renders OVER sprite so the rim clips it on entry */
+.pipe-body {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 80px;
+  width: 112px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 10;  /* above sprite (z-index 8) */
+}
+
+/* Pipe cap (the wider top rim) */
+.pipe-cap {
+  width: 132px;
+  height: 32px;
+  background: linear-gradient(180deg, #3ddc3d 0%, #2db82d 60%, #1f9a1f 100%);
+  border: 3px solid #1a7a1a;
+  border-bottom: none;
+  box-shadow: inset 3px 0 0 rgba(255,255,255,0.28), inset -3px 0 0 rgba(0,0,0,0.32);
+  flex-shrink: 0;
+}
+
+/* Pipe shaft — grows upward as pipe-p 0.05 → 0.45 */
+.pipe-shaft {
+  width: 112px;
+  height: calc(clamp(0, calc((var(--pipe-p, 0) - 0.05) / 0.40), 1) * 280px);
+  background: linear-gradient(180deg, #2db82d 0%, #1f9a1f 100%);
+  border-left: 3px solid #1a7a1a;
+  border-right: 3px solid #1a7a1a;
+  box-shadow: inset 3px 0 0 rgba(255,255,255,0.2), inset -3px 0 0 rgba(0,0,0,0.25);
+}
+
+/* Sprite phases (ground = 80px, pipe top = 80+280+32 = 392px):
+   0.00 → 0.48: walk right from off-screen to just left of pipe
+   0.48 → 0.62: parabolic jump arc up onto pipe top (sin curve)
+   0.62 → 0.68: stand on pipe top
+   0.68 → 0.85: sink down INTO the pipe, fade out
+   Pipe body has z-index 10, sprite z-index 8 — pipe rim clips sprite on entry */
+.pipe-sprite {
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  image-rendering: pixelated;
+  z-index: 8;
+
+  /* Horizontal:
+     0 → 0.48: walk from -120px to 50vw-140px (just left of pipe)
+     0.48 → 0.62: arc the remaining 80px to 50vw-60px (centred on pipe) */
+  left: calc(
+    -120px
+    + clamp(0, calc(var(--pipe-p, 0) / 0.48), 1) * (50vw - 20px)
+    + clamp(0, calc((var(--pipe-p, 0) - 0.48) / 0.14), 1) * 80px
+  );
+
+  /* Vertical:
+     sin-arc jump: bottom 80px → peak ~406px → land at 392px (pipe top)
+     then sink: −160px into pipe */
+  bottom: calc(
+    80px
+    + sin(clamp(0, calc((var(--pipe-p, 0) - 0.48) / 0.14), 1) * 3.14159rad) * 170px
+    + clamp(0, calc((var(--pipe-p, 0) - 0.48) / 0.14), 1) * 312px
+    - clamp(0, calc((var(--pipe-p, 0) - 0.68) / 0.17), 1) * 160px
+  );
+
+  /* Fade out as sprite sinks into pipe */
+  opacity: clamp(0, calc(1 - (var(--pipe-p, 0) - 0.68) / 0.17), 1);
+  will-change: left, bottom, opacity;
+}
+
+.pipe-sprite img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  animation: pipe-walk-bob 0.16s steps(1) infinite;
+}
+
+@keyframes pipe-walk-bob {
+  0%   { transform: translateY(0); }
+  50%  { transform: translateY(-6px); }
+  100% { transform: translateY(0); }
+}
+
+/* "ENTERING NEXT AREA..." caption — sits near top so pipe never covers it */
+.pipe-caption {
+  position: absolute;
+  top: 8vh;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: clamp(8px, 1.4vw, 13px);
+  color: #ffffff;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+  text-shadow: 0 0 8px rgba(0,255,65,0.6);
+  opacity: clamp(0, calc((var(--pipe-p, 0) - 0.10) * 8), 1);
+  z-index: 20;
+}
+
+.pipe-dots {
+  animation: pipe-dots-blink 0.5s step-end infinite;
+}
+
+@keyframes pipe-dots-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+/* Fade-to-black over the last quarter of the pipe cutscene */
+.pipe-scene::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: #000;
+  pointer-events: none;
+  opacity: clamp(0, calc((var(--pipe-p, 0) - 0.75) / 0.25), 1);
+}
+
+/* ================================================================
    BOOT LOADING TRANSITION
    ================================================================ */
 
@@ -526,11 +726,26 @@
   flex-direction: column;
   padding: 0 clamp(20px, 4vw, 64px) 32px;
   background: #0a0a0a;
-  /* pixel dither border at top */
-  border-top: 4px solid #00ff41;
-  box-shadow: 0 -2px 0 0 #003300, inset 0 1px 0 0 #00ff41;
   font-family: 'Press Start 2P', monospace;
   image-rendering: pixelated;
+}
+
+/* Top gradient fade — dissolves the hard edge from black into the section */
+.pixel-sticky-frame::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 28%;
+  background: linear-gradient(
+    to bottom,
+    #000 0%,
+    rgba(0, 0, 0, 0.6) 40%,
+    transparent 100%
+  );
+  pointer-events: none;
+  z-index: 8;
 }
 
 /* Pixel floor strip — character walks on this */
@@ -738,11 +953,9 @@
   filter: brightness(0.85) saturate(0.9);
 }
 
-/* Controlled: full brightness + pixel outline */
+/* Controlled: full brightness + glow only, no outline box */
 .sprite--active {
   filter: brightness(1.1) drop-shadow(0 0 8px #00ff41);
-  outline: 2px solid #00ff41;
-  outline-offset: 4px;
 }
 
 .sprite img {
@@ -767,6 +980,40 @@
   100% { transform: translateY(0); }
 }
 
+/* 'CLICK ME' speech bubble above sprite head */
+.sprite-click-bubble {
+  position: absolute;
+  top: -52px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  color: #000;
+  background: #00ff41;
+  padding: 6px 10px 5px;
+  white-space: nowrap;
+  pointer-events: none;
+  letter-spacing: 0.06em;
+  /* pixel box-shadow for retro feel */
+  box-shadow: 2px 2px 0 #007a1f;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  animation: bubble-bounce 0.9s ease-in-out infinite;
+}
+
+.sprite-click-arrow {
+  font-size: 8px;
+  line-height: 1;
+  color: #000;
+}
+
+@keyframes bubble-bounce {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50%       { transform: translateX(-50%) translateY(-5px); }
+}
+
 /* Arrow-key controls hint */
 .sprite-hint {
   position: absolute;
@@ -774,16 +1021,17 @@
   left: 50%;
   transform: translateX(-50%);
   font-family: 'Press Start 2P', monospace;
-  font-size: 7px;
-  color: rgba(0, 255, 65, 0.38);
-  letter-spacing: 0.1em;
+  font-size: clamp(8px, 1.1vw, 11px);
+  color: #00ff41;
+  letter-spacing: 0.12em;
   white-space: nowrap;
   pointer-events: none;
+  text-shadow: 0 0 10px rgba(0, 255, 65, 0.6);
   opacity: clamp(0, calc((var(--pixel-p, 0) - 0.5) * 8), 1);
   animation: hint-pulse 2s step-end infinite;
 }
 
 @keyframes hint-pulse {
-  0%, 60%, 100% { opacity: clamp(0, calc((var(--pixel-p, 0) - 0.5) * 8), 0.38); }
+  0%, 60%, 100% { opacity: clamp(0, calc((var(--pixel-p, 0) - 0.5) * 8), 0.75); }
   80%            { opacity: clamp(0, calc((var(--pixel-p, 0) - 0.5) * 8), 0.7); }
 }

@@ -8,6 +8,9 @@ function lerp(a: number, b: number, t: number) {
 
 export default function App() {
   const [scrollY, setScrollY] = useState(0)
+  const [pipeState, setPipeState] = useState<'idle' | 'running' | 'done'>('idle')
+  const [pipeAnim, setPipeAnim] = useState(0)     // 0 → 1 over ~2.2 s
+  const pipeRafRef = useRef<number | null>(null)
   const [bootState, setBootState] = useState<'idle' | 'running' | 'done'>('idle')
   const [bootAnim, setBootAnim] = useState(0)
   const rafRef = useRef<number | null>(null)
@@ -29,19 +32,62 @@ export default function App() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  // Trigger boot animation when user scrolls into the boot zone
+  // Trigger pipe cutscene when user scrolls into the transition zone
   useEffect(() => {
-    const bootStart = (window.innerHeight || 800) * 3.2
-    if (bootState === 'idle' && scrollY >= bootStart) {
-      if (scrollY > bootStart + (window.innerHeight || 800) * 0.5) {
-        // Already past boot section (e.g. page reload mid-scroll) — skip it
+    const pipeStart = (window.innerHeight || 800) * 3.2
+    if (pipeState === 'idle' && scrollY >= pipeStart) {
+      if (scrollY > pipeStart + (window.innerHeight || 800) * 0.5) {
+        // Already past — skip everything
+        setPipeState('done')
+        setPipeAnim(1)
         setBootState('done')
         setBootAnim(1)
       } else {
+        setPipeState('running')
+      }
+    }
+  }, [scrollY, pipeState])
+
+  // Pipe cutscene animation — locks scroll, runs ~2.2s, then kicks off boot
+  useEffect(() => {
+    if (pipeState !== 'running') return
+
+    const lockedY = window.scrollY
+    const prevent = (e: Event) => e.preventDefault()
+    const snapBack = () => window.scrollTo(0, lockedY)
+    const preventKeys = (e: KeyboardEvent) => {
+      const scrollKeys = ['ArrowUp', 'ArrowDown', 'Space', 'PageUp', 'PageDown', 'Home', 'End']
+      if (scrollKeys.includes(e.code)) e.preventDefault()
+    }
+    window.addEventListener('wheel', prevent, { passive: false })
+    window.addEventListener('touchmove', prevent, { passive: false })
+    window.addEventListener('scroll', snapBack)
+    window.addEventListener('keydown', preventKeys)
+
+    const cleanupPipe = () => {
+      if (pipeRafRef.current !== null) cancelAnimationFrame(pipeRafRef.current)
+      window.removeEventListener('wheel', prevent)
+      window.removeEventListener('touchmove', prevent)
+      window.removeEventListener('scroll', snapBack)
+      window.removeEventListener('keydown', preventKeys)
+    }
+
+    const duration = 2200
+    const start = performance.now()
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - start) / duration)
+      setPipeAnim(t)
+      if (t < 1) {
+        pipeRafRef.current = requestAnimationFrame(tick)
+      } else {
+        cleanupPipe()
+        setPipeState('done')
         setBootState('running')
       }
     }
-  }, [scrollY, bootState])
+    pipeRafRef.current = requestAnimationFrame(tick)
+    return cleanupPipe
+  }, [pipeState])
 
   // Run animation, lock scroll on ALL input methods, then auto-scroll to projects
   useEffect(() => {
@@ -262,6 +308,7 @@ export default function App() {
     '--nav-glow': `rgba(0,255,120,${(progress * 0.18).toFixed(3)})`,
     '--game-p': gameProgress.toFixed(4),
     '--game-exit': gameExit.toFixed(4),
+    '--pipe-p': pipeAnim.toFixed(4),
     '--boot-p': bootAnim.toFixed(4),
     '--pixel-p': pixelProgress.toFixed(4),
   } as React.CSSProperties
@@ -361,7 +408,33 @@ export default function App() {
           </div>
         </div>
       </section>
-      {/* Boot transition: timer-driven 8-bit loading sequence */}
+      {/* Pipe cutscene overlay — always in DOM so assets are preloaded;
+           hidden via CSS until pipeState is 'running' */}
+      <div
+        className={`pipe-cutscene${pipeState === 'running' ? ' pipe-cutscene--active' : ''}`}
+        aria-hidden="true"
+        style={{ '--pipe-p': pipeAnim.toFixed(4) } as React.CSSProperties}
+      >
+        {/* Sky / ground backdrop */}
+        <div className="pipe-scene">
+          {/* Ground strip */}
+          <div className="pipe-ground" />
+          {/* Pipe structure */}
+          <div className="pipe-body">
+            <div className="pipe-cap" />
+            <div className="pipe-shaft" />
+          </div>
+          {/* Sprite walking then descending */}
+          <div className="pipe-sprite">
+            <img src={spriteImg} alt="" draggable={false} />
+          </div>
+          {/* "ENTERING PIPE..." caption */}
+          <p className="pipe-caption">ENTERING NEXT AREA<span className="pipe-dots">...</span></p>
+        </div>
+      </div>
+
+      {/* Boot transition: timer-driven 8-bit loading sequence — unmounted once done */}
+      {bootState !== 'done' && (
       <section className="screen screen-boot">
         <div className="boot-sticky-frame">
           <div className="pixel-scanline" aria-hidden="true" />
@@ -379,9 +452,7 @@ export default function App() {
             <p className="boot-line" style={{ '--bl': '3' } as React.CSSProperties}>
               <span className="boot-ok">[  OK  ]</span> Started RENDER.ENGINE v4.2.1
             </p>
-            <p className="boot-line" style={{ '--bl': '4' } as React.CSSProperties}>
-              <span className="boot-warn">[ WARN ]</span> Skills above average — proceed with caution
-            </p>
+          
             <p className="boot-line" style={{ '--bl': '5' } as React.CSSProperties}>
               <span className="boot-ok">[  OK  ]</span> Loading PROJECTS.DB ...
             </p>
@@ -402,6 +473,7 @@ export default function App() {
           </div>
         </div>
       </section>
+      )}
 
       {/* Screen 3 — 8-bit Projects */}
       <section className="screen screen-pixel" id="projects">
@@ -482,7 +554,6 @@ export default function App() {
               </article>
             </div>
 
-            <p className="pixel-insert">INSERT COIN TO SEE MORE</p>
           </div>
 
           {/* Sprite — click to take control, click again to release */}
@@ -499,11 +570,17 @@ export default function App() {
             aria-label={isControlled ? 'Click to release sprite control' : 'Click to control sprite'}
           >
             <img src={spriteImg} alt="" draggable={false} />
+            {!isControlled && (
+              <div className="sprite-click-bubble">
+                CLICK ME!
+                <span className="sprite-click-arrow">&#9660;</span>
+              </div>
+            )}
           </div>
           <p className="sprite-hint">
             {isControlled
-              ? <>&#x2190; &#x2192;&nbsp; WALK &nbsp;&middot;&nbsp; &#x2191; / SPACE&nbsp; JUMP &nbsp;&middot;&nbsp; HEADBUTT BLOCK TO OPEN &nbsp;&middot;&nbsp; CLICK TO RELEASE</>
-              : <>CLICK SPRITE TO CONTROL</>}
+              ? <>&larr; &rarr;&nbsp; WALK &nbsp;&middot;&nbsp; &uarr; / SPACE&nbsp; JUMP &nbsp;&middot;&nbsp; HEADBUTT A PROJECT BLOCK FROM BELOW TO OPEN IT &nbsp;&middot;&nbsp; CLICK TO RELEASE</>
+              : <>&#9664; TAKE CONTROL &mdash; WALK UNDER A PROJECT CARD &amp; JUMP TO HEADBUTT IT OPEN &#9654;</>}
           </p>
         </div>
       </section>
