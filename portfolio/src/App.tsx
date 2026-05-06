@@ -1,10 +1,18 @@
 import { useEffect, useRef, useState } from 'react'
 import './App.css'
 import spriteImg from './assets/mesprite.png'
+import bb1 from './assets/1.png'
+import bb2 from './assets/2.png'
+import bb3 from './assets/3.png'
+import bb4 from './assets/4.png'
+import bb5 from './assets/5.png'
+import bb6 from './assets/6.png'
 
 function lerp(a: number, b: number, t: number) {
   return a + (b - a) * t
 }
+
+const bbImgs = [bb1, bb2, bb3, bb4, bb5, bb6]
 
 export default function App() {
   const [scrollY, setScrollY] = useState(0)
@@ -17,6 +25,8 @@ export default function App() {
 
   // Sprite
   const [hitCardIdx, setHitCardIdx] = useState<number | null>(null)
+  const [showProject01, setShowProject01] = useState(false)
+  const [galleryIdx, setGalleryIdx] = useState(0)
   const keysRef       = useRef<Set<string>>(new Set())
   const pixelFrameRef = useRef<HTMLDivElement>(null)
   const cardRefs      = useRef<(HTMLElement | null)[]>([null, null, null, null])
@@ -140,6 +150,18 @@ export default function App() {
     return cleanup
   }, [bootState])
 
+  // Close project page on ESC; navigate gallery with arrow keys
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { setShowProject01(false); return }
+      if (!showProject01) return
+      if (e.key === 'ArrowLeft')  { e.stopPropagation(); setGalleryIdx(i => (i - 1 + bbImgs.length) % bbImgs.length) }
+      if (e.key === 'ArrowRight') { e.stopPropagation(); setGalleryIdx(i => (i + 1) % bbImgs.length) }
+    }
+    window.addEventListener('keydown', onKey, { capture: true })
+    return () => window.removeEventListener('keydown', onKey, { capture: true })
+  }, [showProject01])
+
   // Arrow-key + Space listener — only active when sprite is controlled
   useEffect(() => {
     const onDown = (e: KeyboardEvent) => {
@@ -261,8 +283,16 @@ export default function App() {
             s.lastHitTime = now
             setHitCardIdx(idx)
             setTimeout(() => setHitCardIdx(prev => (prev === idx ? null : prev)), 700)
-            const href = (card as HTMLElement).dataset.href
-            if (href && href !== '#') window.open(href, '_blank', 'noopener,noreferrer')
+            if (idx === 0) {
+              setShowProject01(true)
+              setGalleryIdx(0)
+              spriteControlled.current = false
+              setIsControlled(false)
+              keysRef.current.clear()
+            } else {
+              const href = (card as HTMLElement).dataset.href
+              if (href && href !== '#') window.open(href, '_blank', 'noopener,noreferrer')
+            }
           }
         })
       }
@@ -493,15 +523,15 @@ export default function App() {
                 className={`pixel-card${hitCardIdx === 0 ? ' pixel-card--hit' : ''}`}
                 style={{ '--delay': '0' } as React.CSSProperties}
                 ref={(el) => { cardRefs.current[0] = el }}
-                data-href="#"
+                data-href="https://github.com/Defnotspinach/Bakiir"
               >
-                <div className="pixel-card-icon">&#128187;</div>
+                <div className="pixel-card-icon">&#127795;</div>
                 <h3 className="pixel-card-title">PROJECT_01</h3>
-                <p className="pixel-card-name">Portfolio Site</p>
-                <p className="pixel-card-stack">React · TS · Vite</p>
+                <p className="pixel-card-name">Bantay Bakir</p>
+                <p className="pixel-card-stack">React Native · Node.js · Firebase</p>
                 <div className="pixel-card-footer">
-                  <span className="pixel-tag">FRONTEND</span>
-                  <a href="#" className="pixel-btn">PLAY &gt;</a>
+                  <span className="pixel-tag">THESIS · GIS</span>
+                  <a href="https://github.com/Defnotspinach/Bakiir" target="_blank" rel="noopener noreferrer" className="pixel-btn">PLAY &gt;</a>
                 </div>
               </article>
 
@@ -584,6 +614,118 @@ export default function App() {
           </p>
         </div>
       </section>
+
+      {/* Bantay Bakir — full-page project showcase */}
+      {showProject01 && (
+        <div className="proj-page" role="dialog" aria-modal="true" aria-label="Bantay Bakir project showcase">
+          <div className="proj-page-grid" aria-hidden="true" />
+          <div className="proj-page-scanlines" aria-hidden="true" />
+
+          {/* Navigation bar */}
+          <nav className="proj-nav">
+            <button className="proj-back" onClick={() => setShowProject01(false)}>
+              &#9664; BACK
+            </button>
+            <span className="proj-nav-crumb">MZT.EXE&nbsp;/&nbsp;PROJECT_01&nbsp;/&nbsp;BANTAY_BAKIR</span>
+            <div className="proj-nav-tags">
+              <span className="proj-nav-tag">THESIS</span>
+              <span className="proj-nav-tag">GIS</span>
+              <span className="proj-nav-tag">MOBILE</span>
+            </div>
+          </nav>
+
+          {/* Two-column body */}
+          <div className="proj-body">
+
+            {/* Left — text */}
+            <div className="proj-info">
+              <p className="proj-eyebrow">PROJECT_01 &mdash; 2024</p>
+              <h1 className="proj-title">BANTAY<br />BAKIR</h1>
+              <p className="proj-tagline">QR-Based Tree Tagging G.I.S.<br />for DENR Bayombong</p>
+
+              <div className="proj-divider" />
+
+              <p className="proj-section-label">&gt; ABOUT_</p>
+              <p className="proj-desc">
+                A cross-platform mobile GIS built with React Native to modernize forest inventory
+                for the Department of Environment and Natural Resources (DENR) in Bayombong.
+                I authored the full thesis paper, conducted original field research, and led the
+                entire system design — identifying critical gaps in manual workflows and architecting
+                a solution that replaces paper-based processes with QR-tagged trees, automated
+                data capture, and real-time cloud synchronization.
+              </p>
+
+              <p className="proj-section-label">&gt; KEY FEATURES_</p>
+              <ul className="proj-features">
+                <li>Captures DBH, Merchantable Height &amp; tree health status on-site</li>
+                <li>Real-time Firebase sync with centralized admin dashboard &amp; reporting</li>
+                <li>GIS-based GPS location tracking for accurate forest mapping</li>
+                <li>QR-coded tree tags replacing manual paper-based field recording</li>
+                <li>Enables evidence-based conservation planning for DENR personnel</li>
+              </ul>
+
+              <div className="proj-roles">
+                <span className="proj-role">THESIS AUTHOR</span>
+                <span className="proj-role">LEAD RESEARCHER</span>
+                <span className="proj-role">SYSTEM ARCHITECT</span>
+              </div>
+
+              <div className="proj-stack-row">
+                <span className="proj-stack-tag">REACT NATIVE</span>
+                <span className="proj-stack-tag">NODE.JS</span>
+                <span className="proj-stack-tag">FIREBASE</span>
+                <span className="proj-stack-tag">GIS</span>
+                <span className="proj-stack-tag">QR</span>
+              </div>
+
+              <a
+                href="https://github.com/Defnotspinach/Bakiir"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="proj-cta"
+              >
+                VIEW REPO &gt;&gt;
+              </a>
+            </div>
+
+            {/* Right — image gallery */}
+            <div className="proj-gallery">
+              <div className="proj-gallery-main">
+                <img
+                  src={bbImgs[galleryIdx]}
+                  alt={`Bantay Bakir screenshot ${galleryIdx + 1}`}
+                  className="proj-gallery-img"
+                />
+                <button
+                  className="proj-gallery-arrow proj-gallery-arrow--prev"
+                  onClick={() => setGalleryIdx(i => (i - 1 + bbImgs.length) % bbImgs.length)}
+                  aria-label="Previous screenshot"
+                >&#9664;</button>
+                <button
+                  className="proj-gallery-arrow proj-gallery-arrow--next"
+                  onClick={() => setGalleryIdx(i => (i + 1) % bbImgs.length)}
+                  aria-label="Next screenshot"
+                >&#9654;</button>
+                <div className="proj-gallery-counter">{galleryIdx + 1}&nbsp;/&nbsp;{bbImgs.length}</div>
+              </div>
+
+              <div className="proj-gallery-thumbs">
+                {bbImgs.map((src, i) => (
+                  <button
+                    key={i}
+                    className={`proj-gallery-thumb${galleryIdx === i ? ' proj-gallery-thumb--active' : ''}`}
+                    onClick={() => setGalleryIdx(i)}
+                    aria-label={`Screenshot ${i + 1}`}
+                  >
+                    <img src={src} alt={`Bantay Bakir screenshot ${i + 1}`} />
+                  </button>
+                ))}
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
 
       </div>
   )
