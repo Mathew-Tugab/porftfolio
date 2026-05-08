@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import './App.css'
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from './components/ui/carousel'
+import { Card, CardContent } from './components/ui/card'
 import spriteImg from './assets/mesprite.png'
 import bb1 from './assets/1.png'
 import bb2 from './assets/2.png'
@@ -26,7 +28,7 @@ export default function App() {
   // Sprite
   const [hitCardIdx, setHitCardIdx] = useState<number | null>(null)
   const [showProject01, setShowProject01] = useState(false)
-  const [galleryIdx, setGalleryIdx] = useState(0)
+  const [showProject02, setShowProject02] = useState(false)
   const keysRef       = useRef<Set<string>>(new Set())
   const pixelFrameRef = useRef<HTMLDivElement>(null)
   const cardRefs      = useRef<(HTMLElement | null)[]>([null, null, null, null])
@@ -153,14 +155,12 @@ export default function App() {
   // Close project page on ESC; navigate gallery with arrow keys
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') { setShowProject01(false); return }
+      if (e.key === 'Escape') { setShowProject01(false); setShowProject02(false); return }
       if (!showProject01) return
-      if (e.key === 'ArrowLeft')  { e.stopPropagation(); setGalleryIdx(i => (i - 1 + bbImgs.length) % bbImgs.length) }
-      if (e.key === 'ArrowRight') { e.stopPropagation(); setGalleryIdx(i => (i + 1) % bbImgs.length) }
     }
     window.addEventListener('keydown', onKey, { capture: true })
     return () => window.removeEventListener('keydown', onKey, { capture: true })
-  }, [showProject01])
+  }, [showProject01, showProject02])
 
   // Arrow-key + Space listener — only active when sprite is controlled
   useEffect(() => {
@@ -229,6 +229,7 @@ export default function App() {
       // Idle: apply gravity only so sprite falls to floor if released mid-air
       if (!spriteControlled.current) {
         s.velY += GRAVITY
+        s.posY += s.velY
         if (s.posY >= FLOOR_Y) { s.posY = FLOOR_Y; s.velY = 0; s.onGround = true }
         spriteEl.style.transform = `translate(${Math.round(s.posX)}px, ${Math.round(s.posY)}px)`
         return
@@ -286,6 +287,11 @@ export default function App() {
             if (idx === 0) {
               setShowProject01(true)
               setGalleryIdx(0)
+              spriteControlled.current = false
+              setIsControlled(false)
+              keysRef.current.clear()
+            } else if (idx === 1) {
+              setShowProject02(true)
               spriteControlled.current = false
               setIsControlled(false)
               keysRef.current.clear()
@@ -523,7 +529,7 @@ export default function App() {
                 className={`pixel-card${hitCardIdx === 0 ? ' pixel-card--hit' : ''}`}
                 style={{ '--delay': '0' } as React.CSSProperties}
                 ref={(el) => { cardRefs.current[0] = el }}
-                data-href="https://github.com/Defnotspinach/Bakiir"
+                data-href="#"
               >
                 <div className="pixel-card-icon">&#127795;</div>
                 <h3 className="pixel-card-title">PROJECT_01</h3>
@@ -531,7 +537,7 @@ export default function App() {
                 <p className="pixel-card-stack">React Native · Node.js · Firebase</p>
                 <div className="pixel-card-footer">
                   <span className="pixel-tag">THESIS · GIS</span>
-                  <a href="https://github.com/Defnotspinach/Bakiir" target="_blank" rel="noopener noreferrer" className="pixel-btn">PLAY &gt;</a>
+                  <a href="#" className="pixel-btn">PLAY &gt;</a>
                 </div>
               </article>
 
@@ -539,14 +545,14 @@ export default function App() {
                 className={`pixel-card${hitCardIdx === 1 ? ' pixel-card--hit' : ''}`}
                 style={{ '--delay': '1' } as React.CSSProperties}
                 ref={(el) => { cardRefs.current[1] = el }}
-                data-href="#"
+                data-href="#proj02"
               >
-                <div className="pixel-card-icon">&#128202;</div>
+                <div className="pixel-card-icon">&#128184;</div>
                 <h3 className="pixel-card-title">PROJECT_02</h3>
-                <p className="pixel-card-name">Dashboard App</p>
-                <p className="pixel-card-stack">React · Node · SQL</p>
+                <p className="pixel-card-name">OJT Finance Tracker</p>
+                <p className="pixel-card-stack">JavaScript · MongoDB · Node.js</p>
                 <div className="pixel-card-footer">
-                  <span className="pixel-tag">FULLSTACK</span>
+                  <span className="pixel-tag">OJT · FINTECH</span>
                   <a href="#" className="pixel-btn">PLAY &gt;</a>
                 </div>
               </article>
@@ -616,6 +622,73 @@ export default function App() {
       </section>
 
       {/* Bantay Bakir — full-page project showcase */}
+      {showProject02 && (
+        <div className="proj-page" role="dialog" aria-modal="true" aria-label="OJT Finance Tracker project showcase">
+          <div className="proj-page-grid" aria-hidden="true" />
+          <div className="proj-page-scanlines" aria-hidden="true" />
+
+          <nav className="proj-nav">
+            <button className="proj-back" onClick={() => setShowProject02(false)}>
+              &#9664; BACK
+            </button>
+            <span className="proj-nav-crumb">MZT.EXE&nbsp;/&nbsp;PROJECT_02&nbsp;/&nbsp;OJT_FINANCE_TRACKER</span>
+            <div className="proj-nav-tags">
+              <span className="proj-nav-tag">OJT</span>
+              <span className="proj-nav-tag">FINTECH</span>
+              <span className="proj-nav-tag">FULLSTACK</span>
+            </div>
+          </nav>
+
+          <div className="proj-body">
+            <div className="proj-info">
+              <p className="proj-eyebrow">PROJECT_02 &mdash; 2025</p>
+              <h1 className="proj-title">OJT<br />FINANCE<br />TRACKER</h1>
+              <p className="proj-tagline">Payment Tracking &amp; Follow-Up System<br />integrated with Google Forms</p>
+
+              <div className="proj-divider" />
+
+              <p className="proj-section-label">&gt; ABOUT_</p>
+              <p className="proj-desc">
+                A full-stack finance web application built during my OJT that automates payment
+                tracking by pulling submission data directly from Google Forms. The system
+                monitors pending and completed payments, flags overdue accounts, and sends
+                follow-up notifications — replacing manual spreadsheet workflows with a
+                real-time dashboard backed by MongoDB Atlas.
+              </p>
+
+              <p className="proj-section-label">&gt; KEY FEATURES_</p>
+              <ul className="proj-features">
+                <li>Ingests payment submissions from Google Forms automatically</li>
+                <li>Real-time payment status dashboard with overdue flagging</li>
+                <li>Automated follow-up reminders for pending payments</li>
+                <li>MongoDB Atlas for scalable, cloud-hosted data storage</li>
+                <li>Deployed on Vercel (frontend) and Render (backend)</li>
+              </ul>
+
+              <div className="proj-roles">
+                <span className="proj-role">SOLE DEVELOPER</span>
+                <span className="proj-role">OJT PROJECT</span>
+              </div>
+
+              <div className="proj-stack-row">
+                <span className="proj-stack-tag">JAVASCRIPT</span>
+                <span className="proj-stack-tag">NODE.JS</span>
+                <span className="proj-stack-tag">MONGODB ATLAS</span>
+                <span className="proj-stack-tag">GOOGLE FORMS</span>
+                <span className="proj-stack-tag">VERCEL</span>
+                <span className="proj-stack-tag">RENDER</span>
+              </div>
+
+
+            </div>
+
+            <div className="proj-gallery" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <p style={{ color: 'var(--accent-color)', fontFamily: 'inherit', opacity: 0.5, fontSize: '0.85rem', letterSpacing: '0.1em' }}>[ NO SCREENSHOTS YET ]</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showProject01 && (
         <div className="proj-page" role="dialog" aria-modal="true" aria-label="Bantay Bakir project showcase">
           <div className="proj-page-grid" aria-hidden="true" />
@@ -678,49 +751,30 @@ export default function App() {
                 <span className="proj-stack-tag">QR</span>
               </div>
 
-              <a
-                href="https://github.com/Defnotspinach/Bakiir"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="proj-cta"
-              >
-                VIEW REPO &gt;&gt;
-              </a>
+
             </div>
 
             {/* Right — image gallery */}
             <div className="proj-gallery">
-              <div className="proj-gallery-main">
-                <img
-                  src={bbImgs[galleryIdx]}
-                  alt={`Bantay Bakir screenshot ${galleryIdx + 1}`}
-                  className="proj-gallery-img"
-                />
-                <button
-                  className="proj-gallery-arrow proj-gallery-arrow--prev"
-                  onClick={() => setGalleryIdx(i => (i - 1 + bbImgs.length) % bbImgs.length)}
-                  aria-label="Previous screenshot"
-                >&#9664;</button>
-                <button
-                  className="proj-gallery-arrow proj-gallery-arrow--next"
-                  onClick={() => setGalleryIdx(i => (i + 1) % bbImgs.length)}
-                  aria-label="Next screenshot"
-                >&#9654;</button>
-                <div className="proj-gallery-counter">{galleryIdx + 1}&nbsp;/&nbsp;{bbImgs.length}</div>
-              </div>
-
-              <div className="proj-gallery-thumbs">
-                {bbImgs.map((src, i) => (
-                  <button
-                    key={i}
-                    className={`proj-gallery-thumb${galleryIdx === i ? ' proj-gallery-thumb--active' : ''}`}
-                    onClick={() => setGalleryIdx(i)}
-                    aria-label={`Screenshot ${i + 1}`}
-                  >
-                    <img src={src} alt={`Bantay Bakir screenshot ${i + 1}`} />
-                  </button>
-                ))}
-              </div>
+              <Carousel opts={{ align: 'start' }} className="w-full max-w-xs">
+                <CarouselContent>
+                  {bbImgs.map((src, i) => (
+                    <CarouselItem key={i}>
+                      <Card className="border-0 shadow-none">
+                        <CardContent className="p-0">
+                          <img
+                            src={src}
+                            alt={`Bantay Bakir screenshot ${i + 1}`}
+                            className="proj-gallery-img w-full h-auto rounded-lg"
+                          />
+                        </CardContent>
+                      </Card>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious />
+                <CarouselNext />
+              </Carousel>
             </div>
 
           </div>
