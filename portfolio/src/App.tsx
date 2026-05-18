@@ -9,12 +9,18 @@ import bb3 from './assets/3.png'
 import bb4 from './assets/4.png'
 import bb5 from './assets/5.png'
 import bb6 from './assets/6.png'
+import ojtA from './assets/a.png'
+import ojtB from './assets/b.png'
+import ojtC from './assets/c.png'
+import ojtD from './assets/d.png'
+import ojtE from './assets/e.png'
 
 function lerp(a: number, b: number, t: number) {
   return a + (b - a) * t
 }
 
 const bbImgs = [bb1, bb2, bb3, bb4, bb5, bb6]
+const ojtImgs = [ojtE, ojtD, ojtC, ojtB, ojtA]
 
 export default function App() {
   const [scrollY, setScrollY] = useState(0)
@@ -286,7 +292,6 @@ export default function App() {
             setTimeout(() => setHitCardIdx(prev => (prev === idx ? null : prev)), 700)
             if (idx === 0) {
               setShowProject01(true)
-              setGalleryIdx(0)
               spriteControlled.current = false
               setIsControlled(false)
               keysRef.current.clear()
@@ -390,7 +395,8 @@ export default function App() {
             </div>
             <div className="info-col">
               <p>BUILDING</p>
-              <p>SINCE 2022</p>
+              <p>SINCE 2024
+              </p>
             </div>
           </div>
           <div className="scroll-btn" role="button" aria-label="Scroll down">
@@ -522,6 +528,44 @@ export default function App() {
           </header>
 
           <div className="pixel-content">
+
+            {/* ── Decorative top area ── */}
+            <div className="pixel-top-deco">
+              <p className="pixel-deco-sub">— WORLD 1-1 —</p>
+              <h2 className="pixel-deco-title">PROJECTS<span className="pixel-deco-blink">█</span></h2>
+              <div className="pixel-deco-hud">
+                <div className="pixel-hud-col">
+                  <span className="pixel-hud-label">SCORE</span>
+                  <span className="pixel-hud-val">008450</span>
+                </div>
+                <div className="pixel-hud-col">
+                  <span className="pixel-hud-label">COINS</span>
+                  <span className="pixel-hud-val">&#9711;&nbsp;&times;&nbsp;04</span>
+                </div>
+                <div className="pixel-hud-col">
+                  <span className="pixel-hud-label">WORLD</span>
+                  <span className="pixel-hud-val">1 &#8209; 1</span>
+                </div>
+                <div className="pixel-hud-col">
+                  <span className="pixel-hud-label">TIME</span>
+                  <span className="pixel-hud-val pixel-hud-time">388</span>
+                </div>
+              </div>
+
+              {/* Floating ? blocks + platform — purely decorative */}
+              <div className="pixel-deco-scene" aria-hidden="true">
+                <div className="pixel-deco-row">
+                  <div className="pixel-q-block" style={{ '--bob-delay': '0s' } as React.CSSProperties}>?</div>
+                </div>
+                <div className="pixel-deco-platform" />
+                <div className="pixel-deco-row">
+                  <div className="pixel-q-block" style={{ '--bob-delay': '0.3s' } as React.CSSProperties}>?</div>
+                  <div className="pixel-q-block pixel-q-block--coin" style={{ '--bob-delay': '0.15s' } as React.CSSProperties}>&#9711;</div>
+                  <div className="pixel-q-block" style={{ '--bob-delay': '0.45s' } as React.CSSProperties}>?</div>
+                </div>
+              </div>
+            </div>
+
             <p className="pixel-label">&gt; SELECT PROJECT_</p>
 
             <div className="pixel-grid">
@@ -623,15 +667,14 @@ export default function App() {
 
       {/* Bantay Bakir — full-page project showcase */}
       {showProject02 && (
-        <div className="proj-page" role="dialog" aria-modal="true" aria-label="OJT Finance Tracker project showcase">
-          <div className="proj-page-grid" aria-hidden="true" />
-          <div className="proj-page-scanlines" aria-hidden="true" />
+        <div className="proj-page proj-page--finance" role="dialog" aria-modal="true" aria-label="OJT Finance Tracker project showcase">
+          <div className="proj-bg-glow" aria-hidden="true" />
 
           <nav className="proj-nav">
             <button className="proj-back" onClick={() => setShowProject02(false)}>
-              &#9664; BACK
+              ← Back
             </button>
-            <span className="proj-nav-crumb">MZT.EXE&nbsp;/&nbsp;PROJECT_02&nbsp;/&nbsp;OJT_FINANCE_TRACKER</span>
+            <span className="proj-nav-crumb">Portfolio / Project 02 / OJT Finance Tracker</span>
             <div className="proj-nav-tags">
               <span className="proj-nav-tag">OJT</span>
               <span className="proj-nav-tag">FINTECH</span>
@@ -647,7 +690,7 @@ export default function App() {
 
               <div className="proj-divider" />
 
-              <p className="proj-section-label">&gt; ABOUT_</p>
+              <p className="proj-section-label">About</p>
               <p className="proj-desc">
                 A full-stack finance web application built during my OJT that automates payment
                 tracking by pulling submission data directly from Google Forms. The system
@@ -656,7 +699,7 @@ export default function App() {
                 real-time dashboard backed by MongoDB Atlas.
               </p>
 
-              <p className="proj-section-label">&gt; KEY FEATURES_</p>
+              <p className="proj-section-label">Key Features</p>
               <ul className="proj-features">
                 <li>Ingests payment submissions from Google Forms automatically</li>
                 <li>Real-time payment status dashboard with overdue flagging</li>
@@ -682,24 +725,42 @@ export default function App() {
 
             </div>
 
-            <div className="proj-gallery" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <p style={{ color: 'var(--accent-color)', fontFamily: 'inherit', opacity: 0.5, fontSize: '0.85rem', letterSpacing: '0.1em' }}>[ NO SCREENSHOTS YET ]</p>
+            {/* Right — image gallery */}
+            <div className="proj-gallery proj-gallery--landscape">
+              <Carousel opts={{ align: 'start' }} className="w-full max-w-2xl">
+                <CarouselContent>
+                  {ojtImgs.map((src, i) => (
+                    <CarouselItem key={i}>
+                      <Card className="border-0 shadow-none">
+                        <CardContent className="p-0">
+                          <img
+                            src={src}
+                            alt={`OJT Finance Tracker screenshot ${i + 1}`}
+                            className="proj-gallery-img w-full h-auto rounded-lg"
+                          />
+                        </CardContent>
+                      </Card>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious />
+                <CarouselNext />
+              </Carousel>
             </div>
           </div>
         </div>
       )}
 
       {showProject01 && (
-        <div className="proj-page" role="dialog" aria-modal="true" aria-label="Bantay Bakir project showcase">
-          <div className="proj-page-grid" aria-hidden="true" />
-          <div className="proj-page-scanlines" aria-hidden="true" />
+        <div className="proj-page proj-page--forest" role="dialog" aria-modal="true" aria-label="Bantay Bakir project showcase">
+          <div className="proj-bg-glow" aria-hidden="true" />
 
           {/* Navigation bar */}
           <nav className="proj-nav">
             <button className="proj-back" onClick={() => setShowProject01(false)}>
-              &#9664; BACK
+              ← Back
             </button>
-            <span className="proj-nav-crumb">MZT.EXE&nbsp;/&nbsp;PROJECT_01&nbsp;/&nbsp;BANTAY_BAKIR</span>
+            <span className="proj-nav-crumb">Portfolio / Project 01 / Bantay Bakir</span>
             <div className="proj-nav-tags">
               <span className="proj-nav-tag">THESIS</span>
               <span className="proj-nav-tag">GIS</span>
@@ -718,7 +779,7 @@ export default function App() {
 
               <div className="proj-divider" />
 
-              <p className="proj-section-label">&gt; ABOUT_</p>
+              <p className="proj-section-label">About</p>
               <p className="proj-desc">
                 A cross-platform mobile GIS built with React Native to modernize forest inventory
                 for the Department of Environment and Natural Resources (DENR) in Bayombong.
@@ -728,7 +789,7 @@ export default function App() {
                 data capture, and real-time cloud synchronization.
               </p>
 
-              <p className="proj-section-label">&gt; KEY FEATURES_</p>
+              <p className="proj-section-label">Key Features</p>
               <ul className="proj-features">
                 <li>Captures DBH, Merchantable Height &amp; tree health status on-site</li>
                 <li>Real-time Firebase sync with centralized admin dashboard &amp; reporting</li>
