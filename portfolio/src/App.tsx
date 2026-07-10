@@ -39,6 +39,7 @@ export default function App() {
   const pixelFrameRef = useRef<HTMLDivElement>(null)
   const cardRefs      = useRef<(HTMLElement | null)[]>([null, null, null, null])
   const spriteRef     = useRef<HTMLDivElement>(null)
+  const pixelGridRef  = useRef<HTMLDivElement>(null)
   const spriteGameRef = useRef<number | null>(null)
   const spriteActiveRef  = useRef(false)
   const spriteControlled = useRef(false)
@@ -209,7 +210,7 @@ export default function App() {
 
   // RAF game loop — Mario-style platformer physics
   useEffect(() => {
-    const s = { posX: -1, posY: -1, velX: 0, velY: 0, onGround: false, faceLeft: false, lastHitTime: 0, jumpHeld: false }
+    const s = { posX: -1, posY: -1, velX: 0, velY: 0, onGround: false, faceLeft: false, lastHitTime: 0, jumpHeld: false, camX: 0 }
     const GRAVITY = 0.7, JUMP_VEL = -20, WALK = 5, SW = 200, SH = 200
     // Head hitbox: top-centre of 200x200 sprite container
     const HX = 50, HY = 10, HW = 100, HH = 55
@@ -218,15 +219,22 @@ export default function App() {
       spriteGameRef.current = requestAnimationFrame(loop)
       const frame    = pixelFrameRef.current
       const spriteEl = spriteRef.current
+      const gridEl   = pixelGridRef.current
       if (!frame || !spriteEl) return
 
       const fb = frame.getBoundingClientRect()
       const FLOOR_Y = fb.height - SH - 6
 
+      // World width: extends beyond visible frame when grid overflows (small screens with big gaps)
+      const WORLD_W = gridEl
+        ? Math.max(fb.width, gridEl.offsetLeft + gridEl.offsetWidth + gridEl.offsetLeft)
+        : fb.width
+
       // Spawn at floor as soon as frame is available - visible before click
       if (s.posX === -1) {
         s.posX = 48
         s.posY = FLOOR_Y
+        s.camX = 0
         s.onGround = true
         spriteEl.style.transform = `translate(48px, ${Math.round(FLOOR_Y)}px)`
         return
@@ -237,7 +245,7 @@ export default function App() {
         s.velY += GRAVITY
         s.posY += s.velY
         if (s.posY >= FLOOR_Y) { s.posY = FLOOR_Y; s.velY = 0; s.onGround = true }
-        spriteEl.style.transform = `translate(${Math.round(s.posX)}px, ${Math.round(s.posY)}px)`
+        spriteEl.style.transform = `translate(${Math.round(s.posX - s.camX)}px, ${Math.round(s.posY)}px)`
         return
       }
 
@@ -270,18 +278,24 @@ export default function App() {
         s.onGround = true
       }
 
-      // Walls
-      s.posX = Math.max(0, Math.min(fb.width - SW, s.posX))
+      // Walls — use world width so sprite can scroll past the visible frame edge
+      s.posX = Math.max(0, Math.min(WORLD_W - SW, s.posX))
+
+      // Camera: follows sprite when world is wider than frame
+      const CAM_MAX = Math.max(0, WORLD_W - fb.width)
+      s.camX = Math.max(0, Math.min(CAM_MAX, s.posX - fb.width * 0.45))
+      if (gridEl) gridEl.style.transform = `translateX(${-Math.round(s.camX)}px)`
 
       // Head-bump detection — only while moving UPWARD (like Mario hitting a block from below)
       const now = Date.now()
       if (s.velY < 0 && now - s.lastHitTime > 600) {
-        const hx1 = fb.left + s.posX + HX
+        const hx1 = fb.left + (s.posX - s.camX) + HX
         const hy1 = fb.top  + s.posY + HY
         const hx2 = hx1 + HW
         const hy2 = hy1 + HH
-        cardRefs.current.forEach((card, idx) => {
-          if (!card) return
+        for (let idx = 0; idx < cardRefs.current.length; idx++) {
+          const card = cardRefs.current[idx]
+          if (!card) continue
           const cr = card.getBoundingClientRect()
           if (hx1 < cr.right && hx2 > cr.left && hy1 < cr.bottom && hy2 > cr.top) {
             // Bounce sprite back down; push below card bottom so no repeated triggers
@@ -304,13 +318,14 @@ export default function App() {
               const href = (card as HTMLElement).dataset.href
               if (href && href !== '#') window.open(href, '_blank', 'noopener,noreferrer')
             }
+            break  // only hit one card per jump — no double-opens
           }
-        })
+        }
       }
 
       // Update DOM every frame
       const bob = (s.velX !== 0 && s.onGround) ? (Math.floor(now / 120) % 2) * 2 : 0
-      spriteEl.style.transform = `translate(${Math.round(s.posX)}px, ${Math.round(s.posY + bob)}px)`
+      spriteEl.style.transform = `translate(${Math.round(s.posX - s.camX)}px, ${Math.round(s.posY + bob)}px)`
       const img = spriteEl.querySelector('img') as HTMLImageElement | null
       if (img) img.style.transform = s.faceLeft ? 'scaleX(-1)' : ''
     }
@@ -568,7 +583,7 @@ export default function App() {
 
             <p className="pixel-label">&gt; SELECT PROJECT_</p>
 
-            <div className="pixel-grid">
+            <div className="pixel-grid" ref={pixelGridRef}>
               <article
                 className={`pixel-card${hitCardIdx === 0 ? ' pixel-card--hit' : ''}`}
                 style={{ '--delay': '0' } as React.CSSProperties}

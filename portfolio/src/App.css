@@ -1024,8 +1024,8 @@
 /* ---- Project grid ---- */
 .pixel-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
+  grid-template-columns: repeat(4, minmax(200px, 1fr));
+  gap: 80px;
   /* Fixed 280px above the pixel-content bottom edge keeps cards inside the
      sprite's jump arc at every viewport height. Physics derivation:
      FLOOR_Y = vh-206, peak head reach = FLOOR_Y-276; cards must have
