@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import type React from 'react'
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from './ui/carousel'
 import { Card, CardContent } from './ui/card'
 import spriteImg from '../assets/mesprite.png'
@@ -28,8 +29,10 @@ const SKILLS = [
 export default function MobileApp() {
   const [showProject01, setShowProject01] = useState(false)
   const [showProject02, setShowProject02] = useState(false)
-  const [skillsIn, setSkillsIn]           = useState(false)
-  const skillsRef = useRef<HTMLUListElement>(null)
+  const [skillsIn, setSkillsIn]     = useState(false)
+  const [projectsIn, setProjectsIn] = useState(false)
+  const skillsRef  = useRef<HTMLElement>(null)
+  const projectsRef = useRef<HTMLElement>(null)
 
   // Lock body scroll while a modal is open
   useEffect(() => {
@@ -46,13 +49,25 @@ export default function MobileApp() {
     return () => window.removeEventListener('keydown', fn)
   }, [])
 
-  // Animate skill bars when section scrolls into view
+  // Reveal skills section (bars + text) when it scrolls into view
   useEffect(() => {
     const el = skillsRef.current
     if (!el) return
     const obs = new IntersectionObserver(
       ([entry]) => { if (entry.isIntersecting) setSkillsIn(true) },
-      { threshold: 0.25 }
+      { threshold: 0.15 }
+    )
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
+
+  // Reveal projects section when it scrolls into view
+  useEffect(() => {
+    const el = projectsRef.current
+    if (!el) return
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) setProjectsIn(true) },
+      { threshold: 0.1 }
     )
     obs.observe(el)
     return () => obs.disconnect()
@@ -88,30 +103,6 @@ export default function MobileApp() {
           </h1>
         </div>
 
-        {/* Decorative code block — fills empty space, keeps terminal aesthetic */}
-        <div className="m-code-block" aria-hidden="true">
-          <span className="m-code-comment">// available for work</span>
-          <div className="m-code-line">
-            <span className="m-code-kw">const</span>
-            <span className="m-code-id"> developer</span>
-            <span className="m-code-op"> = </span>
-            <span className="m-code-str">'mathew zeus'</span>
-          </div>
-          <div className="m-code-line">
-            <span className="m-code-kw">const</span>
-            <span className="m-code-id"> focus</span>
-            <span className="m-code-op"> = </span>
-            <span className="m-code-str">'frontend'</span>
-          </div>
-          <div className="m-code-line">
-            <span className="m-code-id">developer</span>
-            <span className="m-code-op">.</span>
-            <span className="m-code-fn">build</span>
-            <span className="m-code-op">()</span>
-            <span className="cursor">_</span>
-          </div>
-        </div>
-
         <div className="m-landing-footer">
           <div className="m-info-row">
             <div className="m-info-col">
@@ -140,7 +131,11 @@ export default function MobileApp() {
       {/* ═══════════════════════════════════════
           SECTION 2 — SKILLS
       ═══════════════════════════════════════ */}
-      <section className="m-skills" id="m-work">
+      <section
+        className={`m-skills${skillsIn ? ' m-skills--in' : ''}`}
+        id="m-work"
+        ref={skillsRef as React.RefObject<HTMLElement>}
+      >
         <div className="m-skills-hud">
           <span>// PORTFOLIO.exe</span>
           <span>PLAYER_01 &gt; MATHEW_ZEUS</span>
@@ -148,7 +143,7 @@ export default function MobileApp() {
         <p className="m-skills-eyebrow">SELECT MISSION</p>
         <h2 className="m-skills-title">SKILL_TREE<span className="cursor">_</span></h2>
 
-        <ul className="m-skill-list" ref={skillsRef}>
+        <ul className="m-skill-list">
           {SKILLS.map(({ tag, w }) => (
             <li key={tag} className="m-skill-row">
               <span className="m-skill-tag">{tag}</span>
@@ -167,7 +162,11 @@ export default function MobileApp() {
       {/* ═══════════════════════════════════════
           SECTION 3 — PROJECTS
       ═══════════════════════════════════════ */}
-      <section className="m-projects" id="m-projects">
+      <section
+        className={`m-projects${projectsIn ? ' m-projects--in' : ''}`}
+        id="m-projects"
+        ref={projectsRef as React.RefObject<HTMLElement>}
+      >
         {/* Pixel header bar */}
         <div className="m-pix-header">
           <span className="pixel-logo">&#9632;&#9632;&#9632; MZT.EXE &#9632;&#9632;&#9632;</span>
