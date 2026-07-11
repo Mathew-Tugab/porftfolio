@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import './App.css'
+import MobileApp from './components/MobileApp'
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from './components/ui/carousel'
 import { Card, CardContent } from './components/ui/card'
 import spriteImg from './assets/mesprite.png'
@@ -23,6 +24,7 @@ const bbImgs = [bb1, bb2, bb3, bb4, bb5, bb6]
 const ojtImgs = [ojtE, ojtD, ojtC, ojtB, ojtA]
 
 export default function App() {
+  const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 767px)').matches)
   const [scrollY, setScrollY] = useState(0)
   const [pipeState, setPipeState] = useState<'idle' | 'running' | 'done'>('idle')
   const [pipeAnim, setPipeAnim] = useState(0)     // 0 → 1 over ~2.2 s
@@ -45,6 +47,14 @@ export default function App() {
   const spriteControlled = useRef(false)
   const [isControlled, setIsControlled] = useState(false)
 
+  // Detect mobile / respond to resize (e.g. DevTools responsive mode)
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)')
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
+
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY)
     window.addEventListener('scroll', handleScroll, { passive: true })
@@ -53,6 +63,7 @@ export default function App() {
 
   // Trigger pipe cutscene when user scrolls into the transition zone
   useEffect(() => {
+    if (isMobile) return
     const pipeStart = (window.innerHeight || 800) * 3.2
     if (pipeState === 'idle' && scrollY >= pipeStart) {
       if (scrollY > pipeStart + (window.innerHeight || 800) * 0.5) {
@@ -65,11 +76,11 @@ export default function App() {
         setPipeState('running')
       }
     }
-  }, [scrollY, pipeState])
+  }, [scrollY, pipeState, isMobile])
 
   // Pipe cutscene animation — locks scroll, runs ~2.2s, then kicks off boot
   useEffect(() => {
-    if (pipeState !== 'running') return
+    if (isMobile || pipeState !== 'running') return
 
     const lockedY = window.scrollY
     const prevent = (e: Event) => e.preventDefault()
@@ -106,11 +117,11 @@ export default function App() {
     }
     pipeRafRef.current = requestAnimationFrame(tick)
     return cleanupPipe
-  }, [pipeState])
+  }, [pipeState, isMobile])
 
   // Run animation, lock scroll on ALL input methods, then auto-scroll to projects
   useEffect(() => {
-    if (bootState !== 'running') return
+    if (isMobile || bootState !== 'running') return
 
     // Capture the scroll position to lock to
     const lockedY = window.scrollY
@@ -157,7 +168,7 @@ export default function App() {
     }
     rafRef.current = requestAnimationFrame(tick)
     return cleanup
-  }, [bootState])
+  }, [bootState, isMobile])
 
   // Close project page on ESC; navigate gallery with arrow keys
   useEffect(() => {
@@ -193,7 +204,7 @@ export default function App() {
 
   // Lock scroll while controlling sprite so arrow keys / space don't move the page
   useEffect(() => {
-    if (!isControlled) return
+    if (isMobile || !isControlled) return
     const prevent = (e: Event) => e.preventDefault()
     const preventKeys = (e: KeyboardEvent) => {
       if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)) e.preventDefault()
@@ -206,10 +217,11 @@ export default function App() {
       window.removeEventListener('touchmove', prevent)
       window.removeEventListener('keydown', preventKeys, { capture: true })
     }
-  }, [isControlled])
+  }, [isControlled, isMobile])
 
-  // RAF game loop — Mario-style platformer physics
+  // RAF game loop — Mario-style platformer physics (desktop only)
   useEffect(() => {
+    if (isMobile) return
     const s = { posX: -1, posY: -1, velX: 0, velY: 0, onGround: false, faceLeft: false, lastHitTime: 0, jumpHeld: false, camX: 0 }
     const GRAVITY = 0.7, JUMP_VEL = -20, WALK = 5, SW = 200, SH = 200
     // Head hitbox: top-centre of 200x200 sprite container
@@ -333,6 +345,9 @@ export default function App() {
     spriteGameRef.current = requestAnimationFrame(loop)
     return () => { if (spriteGameRef.current) cancelAnimationFrame(spriteGameRef.current) }
   }, [])
+
+  // Mobile layout — rendered after all hooks so no rules-of-hooks violation
+  if (isMobile) return <MobileApp />
 
   const vh = window.innerHeight || 800
   const progress = Math.min(1, Math.max(0, scrollY / vh))

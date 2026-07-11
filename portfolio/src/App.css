@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Press+Start+2P&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@1,700&family=Press+Start+2P&display=swap');
 
 /* ---- Page Layout ---- */
 .page {
@@ -1638,7 +1638,10 @@
 @media (max-width: 768px) {
   .proj-body {
     grid-template-columns: 1fr;
+    /* Single-column stack — let rows size to content, parent scrolls */
+    grid-template-rows: auto auto;
     overflow-y: auto;
+    align-content: start;
   }
   .proj-info {
     border-right: none;
@@ -1646,10 +1649,430 @@
     padding: 28px 24px;
     overflow-y: visible;
   }
-  .proj-gallery {
+  .proj-gallery,
+  .proj-gallery--landscape {
     padding: 24px 20px;
+    /* Don't scroll inside the gallery — let .proj-body scroll the full stack */
+    overflow-y: visible;
+    justify-content: flex-start;
   }
   .proj-nav { padding: 0 20px; height: 52px; }
   .proj-nav-crumb { display: none; }
   .proj-title { font-size: clamp(28px, 8vw, 44px); }
+}
+
+/* ================================================================
+   MOBILE LAYOUT  (MobileApp.tsx — rendered when viewport < 768 px)
+   ================================================================ */
+
+/* ── Page shell ── */
+.m-page {
+  background: #060a13;
+  position: relative;
+  overflow-x: hidden;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  --accent-color: #f5a020;
+  /* enable the same scanline overlay used on desktop */
+  --scanline-opacity: 0.055;
+}
+
+/* Subtle CRT grid — always on for mobile */
+.m-crt-grid {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(0, 255, 120, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 120, 0.045) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+/* ── Landing ── */
+.m-landing {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 10;
+  padding: 0 clamp(20px, 6vw, 40px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* Blue radial glow — mirrors the desktop initial state */
+.m-landing-glow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 130% 65% at 16% 48%, rgba(22, 68, 148, 0.52) 0%, transparent 62%),
+    radial-gradient(ellipse 70% 50% at 88% 70%,  rgba(10, 32, 80,  0.20) 0%, transparent 55%);
+}
+
+/* Lift nav/hero/code/footer above the absolute glow layer */
+.m-nav,
+.m-hero,
+.m-code-block,
+.m-landing-footer {
+  position: relative;
+  z-index: 1;
+}
+
+.m-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  flex-shrink: 0;
+}
+
+.m-nav-brand {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.m-nav-links {
+  display: flex;
+  gap: 20px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.m-nav-links a {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: rgba(255, 255, 255, 0.45);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+.m-nav-links a:hover { color: rgba(255, 255, 255, 0.85); }
+
+/* Hero — fixed padding (no flex: 1 so it doesn't swallow all space) */
+.m-hero {
+  padding: clamp(28px, 6vw, 44px) 0;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.m-hero-eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  color: var(--accent-color, #f5a020);
+  margin: 0 0 16px;
+  opacity: 0.9;
+}
+
+.m-hero-h1 {
+  font-size: clamp(64px, 19vw, 108px);
+  font-weight: 900;
+  line-height: 0.84;
+  letter-spacing: -0.035em;
+  color: #ffffff;
+  margin: 0 0 14px;
+  display: flex;
+  flex-direction: column;
+}
+
+.m-hero-line { display: block; }
+.m-hero-line--right { text-align: right; }
+
+.m-hero-accent {
+  font-style: italic;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-weight: 700;
+  color: var(--accent-color, #f5a020);
+  font-size: clamp(32px, 9.5vw, 64px);
+  line-height: 1.05;
+  margin-top: 6px;
+}
+
+/* ── Decorative code block — fills empty vertical space ── */
+.m-code-block {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  padding: clamp(18px, 4vw, 28px) 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  font-family: ui-monospace, Consolas, 'Courier New', monospace;
+  font-size: clamp(11px, 3vw, 14px);
+  line-height: 2;
+}
+
+.m-code-line   { display: block; }
+.m-code-comment{ color: rgba(255, 255, 255, 0.2); font-style: italic; }
+.m-code-kw     { color: #c678dd; }
+.m-code-id     { color: #61afef; }
+.m-code-op     { color: rgba(255, 255, 255, 0.3); }
+.m-code-str    { color: #98c379; }
+.m-code-fn     { color: #e5c07b; }
+
+/* ── Landing footer ── */
+.m-landing-footer {
+  padding: 22px 0 clamp(28px, 6vw, 44px);
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  flex-shrink: 0;
+}
+
+.m-info-row {
+  display: flex;
+  gap: clamp(16px, 5vw, 32px);
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.m-info-col p {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0;
+  line-height: 1.7;
+}
+
+.m-info-muted {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.28);
+  margin: 0 0 18px;
+}
+
+.m-scroll-cue {
+  color: rgba(255, 255, 255, 0.3);
+  animation: m-bounce 2s ease-in-out infinite;
+  width: fit-content;
+}
+
+@keyframes m-bounce {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(6px); }
+}
+
+/* ── Skills ── */
+.m-skills {
+  position: relative;
+  z-index: 10;
+  padding: clamp(48px, 10vw, 72px) clamp(20px, 6vw, 40px);
+  font-family: ui-monospace, Consolas, monospace;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background: #060a13;
+  overflow: hidden;
+}
+
+/* Ambient green glow on the right side — mirrors desktop game section */
+.m-skills::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse 85% 60% at 85% 50%, rgba(0, 255, 120, 0.07) 0%, transparent 65%);
+}
+
+.m-skills-hud {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: #00ff88;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+  gap: 6px;
+  opacity: 0.75;
+}
+
+.m-skills-eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: #00ff88;
+  margin: 0 0 10px;
+  opacity: 0.85;
+}
+
+.m-skills-title {
+  font-size: clamp(30px, 8.5vw, 56px);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+  margin: 0 0 36px;
+  line-height: 1;
+  text-shadow: 0 0 40px rgba(0, 255, 120, 0.25);
+}
+
+.m-skill-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: relative;
+  z-index: 1;
+}
+
+.m-skill-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.m-skill-tag {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  color: #00ff88;
+  min-width: 96px;
+}
+
+.m-skill-bar {
+  flex: 1;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.m-skill-fill {
+  height: 100%;
+  background: #00ff88;
+  box-shadow: 0 0 8px #00ff88;
+  border-radius: 2px;
+  transition: width 1.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.m-skill-val {
+  font-size: 9px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.3);
+  min-width: 22px;
+  text-align: right;
+}
+
+/* ── Projects ── */
+.m-projects {
+  position: relative;
+  z-index: 10;
+  padding: clamp(32px, 7vw, 56px) clamp(20px, 6vw, 40px) clamp(40px, 8vw, 64px);
+  font-family: 'Press Start 2P', monospace;
+  background: #0a0a0a;
+  overflow: hidden;
+  /* make pixel-card + pixel-label visible without scroll-driven --pixel-p */
+  --pixel-p: 1;
+}
+
+/* Green ambient glow rising from the bottom — matches pixel section atmosphere */
+.m-projects::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse 110% 45% at 50% 105%, rgba(0, 255, 65, 0.07) 0%, transparent 62%);
+}
+
+.m-pix-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 14px;
+  border-bottom: 2px solid #003300;
+  font-size: clamp(6px, 1.8vw, 9px);
+  margin-bottom: 24px;
+  position: relative;
+  z-index: 1;
+}
+
+.m-pix-top {
+  margin-bottom: 20px;
+  position: relative;
+  z-index: 1;
+}
+
+.m-pix-title {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(18px, 6.5vw, 34px);
+  color: #00ff41;
+  margin: 0 0 18px;
+  line-height: 1.15;
+  letter-spacing: 0.04em;
+  text-shadow: 3px 3px 0 #003300, 0 0 24px rgba(0, 255, 65, 0.35);
+  animation: deco-title-glitch 5s steps(1) infinite;
+}
+
+/* Make pixel-deco-hud tighter on mobile */
+.m-pix-top .pixel-deco-hud {
+  gap: clamp(14px, 4vw, 32px);
+}
+
+.m-pix-label {
+  margin-bottom: 20px !important;
+  transform: none !important;
+  position: relative;
+  z-index: 1;
+}
+
+/* 2-column grid; drops to 1 col under 360 px */
+.m-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+  margin-bottom: 40px;
+  position: relative;
+  z-index: 1;
+}
+
+@media (max-width: 360px) {
+  .m-card-grid { grid-template-columns: 1fr; }
+  .m-skill-tag  { min-width: 80px; font-size: 8px; }
+  .m-hero-h1    { font-size: clamp(54px, 17vw, 84px); }
+}
+
+/* Tappable card overrides */
+.m-card-tap {
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+  transform: none !important;
+  opacity: 1 !important;
+}
+
+.m-card-tap:focus-visible {
+  border-color: #00ff41;
+  box-shadow: 4px 4px 0 0 #00ff41;
+}
+
+.m-card-tap:active {
+  transform: scale(0.96) !important;
+  border-color: #ffcc00;
+  box-shadow: 4px 4px 0 0 #ffcc00;
+  transition: transform 0.08s ease;
+}
+
+/* Decorative sprite at bottom of projects section */
+.m-sprite-deco {
+  display: flex;
+  justify-content: flex-end;
+  padding-right: 8px;
+  position: relative;
+  z-index: 1;
+}
+
+.m-sprite-deco img {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  opacity: 0.45;
+  animation: pipe-walk-bob 0.4s ease-in-out infinite;
 }
