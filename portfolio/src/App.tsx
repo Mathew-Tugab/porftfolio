@@ -563,37 +563,6 @@ export default function App() {
             <div className="pixel-top-deco">
               <p className="pixel-deco-sub">— WORLD 1-1 —</p>
               <h2 className="pixel-deco-title">PROJECTS<span className="pixel-deco-blink">█</span></h2>
-              <div className="pixel-deco-hud">
-                <div className="pixel-hud-col">
-                  <span className="pixel-hud-label">SCORE</span>
-                  <span className="pixel-hud-val">008450</span>
-                </div>
-                <div className="pixel-hud-col">
-                  <span className="pixel-hud-label">COINS</span>
-                  <span className="pixel-hud-val">&#9711;&nbsp;&times;&nbsp;04</span>
-                </div>
-                <div className="pixel-hud-col">
-                  <span className="pixel-hud-label">WORLD</span>
-                  <span className="pixel-hud-val">1 &#8209; 1</span>
-                </div>
-                <div className="pixel-hud-col">
-                  <span className="pixel-hud-label">TIME</span>
-                  <span className="pixel-hud-val pixel-hud-time">388</span>
-                </div>
-              </div>
-
-              {/* Floating ? blocks + platform — purely decorative */}
-              <div className="pixel-deco-scene" aria-hidden="true">
-                <div className="pixel-deco-row">
-                  <div className="pixel-q-block" style={{ '--bob-delay': '0s' } as React.CSSProperties}>?</div>
-                </div>
-                <div className="pixel-deco-platform" />
-                <div className="pixel-deco-row">
-                  <div className="pixel-q-block" style={{ '--bob-delay': '0.3s' } as React.CSSProperties}>?</div>
-                  <div className="pixel-q-block pixel-q-block--coin" style={{ '--bob-delay': '0.15s' } as React.CSSProperties}>&#9711;</div>
-                  <div className="pixel-q-block" style={{ '--bob-delay': '0.45s' } as React.CSSProperties}>?</div>
-                </div>
-              </div>
             </div>
 
             <p className="pixel-label">&gt; SELECT PROJECT_</p>
