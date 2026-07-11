@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import type React from 'react'
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from './ui/carousel'
+import { Carousel, CarouselContent, CarouselItem } from './ui/carousel'
 import { Card, CardContent } from './ui/card'
 import spriteImg from '../assets/mesprite.png'
 import bb1 from '../assets/1.png'
@@ -331,8 +331,6 @@ export default function MobileApp() {
                     </CarouselItem>
                   ))}
                 </CarouselContent>
-                <CarouselPrevious />
-                <CarouselNext />
               </Carousel>
             </div>
           </div>
@@ -409,8 +407,6 @@ export default function MobileApp() {
                     </CarouselItem>
                   ))}
                 </CarouselContent>
-                <CarouselPrevious />
-                <CarouselNext />
               </Carousel>
             </div>
           </div>
