@@ -71,9 +71,11 @@ const MISSIONS = [
 
 // ─── Animation variants ────────────────────────────────────────────────────────
 
+const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1]
+
 const fadeUp = {
   hidden: { opacity: 0, y: 18 },
-  show:   { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
+  show:   { opacity: 1, y: 0, transition: { duration: 0.5, ease: EASE } },
 }
 
 const stagger = (delayChildren = 0, staggerChildren = 0.07) => ({
@@ -233,7 +235,7 @@ function StatBox({
       className="st-stat-box"
       initial={{ opacity: 0, scale: 0.85 }}
       animate={active ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.85 }}
-      transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1], delay }}
+      transition={{ duration: 0.45, ease: EASE, delay }}
     >
       <span className="st-stat-num">{num}</span>
       <span className="st-stat-lbl">{label}</span>
