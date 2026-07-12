@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import './App.css'
 import MobileApp from './components/MobileApp'
+import SkillTree from './components/SkillTree'
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from './components/ui/carousel'
 import { Card, CardContent } from './components/ui/card'
 import spriteImg from './assets/mesprite.png'
@@ -446,38 +447,7 @@ export default function App() {
             <span className="hud-tag">PLAYER_01 &gt; MATHEW_ZEUS</span>
           </div>
 
-          <div className="game-content">
-            <p className="game-eyebrow">SELECT MISSION</p>
-            <h2 className="game-title">SKILL_TREE<span className="cursor">_</span></h2>
-            <ul className="skill-list">
-              <li>
-                <span className="skill-tag">REACT</span>
-                <span className="skill-bar"><span className="skill-fill" style={{ '--w': '0.92' } as React.CSSProperties} /></span>
-                <span className="skill-val">92</span>
-              </li>
-              <li>
-                <span className="skill-tag">TYPESCRIPT</span>
-                <span className="skill-bar"><span className="skill-fill" style={{ '--w': '0.88' } as React.CSSProperties} /></span>
-                <span className="skill-val">88</span>
-              </li>
-              <li>
-                <span className="skill-tag">NODE.JS</span>
-                <span className="skill-bar"><span className="skill-fill" style={{ '--w': '0.78' } as React.CSSProperties} /></span>
-                <span className="skill-val">78</span>
-              </li>
-              <li>
-                <span className="skill-tag">UI / UX</span>
-                <span className="skill-bar"><span className="skill-fill" style={{ '--w': '0.85' } as React.CSSProperties} /></span>
-                <span className="skill-val">85</span>
-              </li>
-              <li>
-                <span className="skill-tag">SQL / NoSQL</span>
-                <span className="skill-bar"><span className="skill-fill" style={{ '--w': '0.72' } as React.CSSProperties} /></span>
-                <span className="skill-val">72</span>
-              </li>
-            </ul>
-            <p className="game-prompt">[ SCROLL TO CONTINUE ]</p>
-          </div>
+          <SkillTree gameP={gameProgress} />
         </div>
       </section>
       {/* Pipe cutscene overlay — always in DOM so assets are preloaded;

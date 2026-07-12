@@ -232,8 +232,8 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  padding: 80px clamp(24px, 5vw, 72px);
+  justify-content: flex-start;
+  padding: 80px clamp(24px, 5vw, 72px) 28px;
   font-family: ui-monospace, Consolas, monospace;
 }
 
