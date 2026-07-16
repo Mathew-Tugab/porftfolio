@@ -1162,6 +1162,67 @@
   display: block;
 }
 
+/* WIP card — amber tint, dimmed, with badge */
+.pixel-card--wip {
+  border-color: #4a3800;
+  box-shadow: 4px 4px 0 0 #4a3800;
+  opacity: clamp(0, calc((var(--pixel-p, 0) - calc(0.1 + 2 * 0.08)) * 8), 0.72);
+  position: relative;
+}
+
+.pixel-card--wip:hover {
+  border-color: #ffcc00;
+  box-shadow: 4px 4px 0 0 #ffcc00;
+  opacity: 0.88;
+}
+
+.pixel-card-wip-badge {
+  display: none;
+}
+
+.pixel-wip-label {
+  font-size: clamp(5px, 0.6vw, 7px);
+  font-family: 'Press Start 2P', monospace;
+  color: #ffcc00;
+  letter-spacing: 0.08em;
+  text-shadow: 0 0 4px #ffcc00;
+}
+
+.pixel-wip-loader {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pixel-wip-loader span {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  background: #ffcc00;
+  box-shadow: 0 0 4px #ffcc00;
+  animation: wip-dot 1.2s steps(1) infinite;
+}
+
+.pixel-wip-loader span:nth-child(2) { animation-delay: 0.4s; }
+.pixel-wip-loader span:nth-child(3) { animation-delay: 0.8s; }
+
+@keyframes wip-dot {
+  0%, 40%  { opacity: 1; }
+  41%, 100% { opacity: 0.15; }
+}
+
+@keyframes wip-blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+.pixel-btn--locked {
+  color: #ffcc00 !important;
+  opacity: 0.7;
+  cursor: default;
+  pointer-events: none;
+}
+
 /* Card bumps up briefly when sprite hits from below, then returns */
 .pixel-card--hit {
   border-color: #ffcc00 !important;

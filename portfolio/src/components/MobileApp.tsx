@@ -231,6 +231,17 @@ export default function MobileApp() {
             </div>
           </article>
 
+          <article className="pixel-card pixel-card--wip m-card-tap" role="button" tabIndex={0}>
+            <div className="pixel-card-icon">&#129302;</div>
+            <h3 className="pixel-card-title">PROJECT_03</h3>
+            <p className="pixel-card-name">AI Support Platform</p>
+            <p className="pixel-card-stack">React · Python · OpenAI</p>
+            <div className="pixel-card-footer">
+              <span className="pixel-wip-label">WORK IN PROGRESS</span>
+              <span className="pixel-wip-loader"><span/><span/><span/></span>
+            </div>
+          </article>
+
         </div>
 
         {/* Decorative sprite */}

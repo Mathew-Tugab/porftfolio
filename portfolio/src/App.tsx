@@ -40,7 +40,7 @@ export default function App() {
   const [showProject02, setShowProject02] = useState(false)
   const keysRef       = useRef<Set<string>>(new Set())
   const pixelFrameRef = useRef<HTMLDivElement>(null)
-  const cardRefs      = useRef<(HTMLElement | null)[]>([null, null])
+  const cardRefs      = useRef<(HTMLElement | null)[]>([null, null, null])
   const spriteRef     = useRef<HTMLDivElement>(null)
   const pixelGridRef  = useRef<HTMLDivElement>(null)
   const spriteGameRef = useRef<number | null>(null)
@@ -567,6 +567,22 @@ export default function App() {
                 <div className="pixel-card-footer">
                   <span className="pixel-tag">OJT · FINTECH</span>
                   <a href="#" className="pixel-btn">PLAY &gt;</a>
+                </div>
+              </article>
+
+              <article
+                className={`pixel-card pixel-card--wip${hitCardIdx === 2 ? ' pixel-card--hit' : ''}`}
+                style={{ '--delay': '2' } as React.CSSProperties}
+                ref={(el) => { cardRefs.current[2] = el }}
+                data-href="#"
+              >
+                <div className="pixel-card-icon">&#129302;</div>
+                <h3 className="pixel-card-title">PROJECT_03</h3>
+                <p className="pixel-card-name">AI Support Platform</p>
+                <p className="pixel-card-stack">React · Python · OpenAI</p>
+                <div className="pixel-card-footer">
+                  <span className="pixel-wip-label">WORK IN PROGRESS</span>
+                  <span className="pixel-wip-loader"><span/><span/><span/></span>
                 </div>
               </article>
 
