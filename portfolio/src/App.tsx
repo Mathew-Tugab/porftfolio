@@ -40,7 +40,7 @@ export default function App() {
   const [showProject02, setShowProject02] = useState(false)
   const keysRef       = useRef<Set<string>>(new Set())
   const pixelFrameRef = useRef<HTMLDivElement>(null)
-  const cardRefs      = useRef<(HTMLElement | null)[]>([null, null, null, null])
+  const cardRefs      = useRef<(HTMLElement | null)[]>([null, null])
   const spriteRef     = useRef<HTMLDivElement>(null)
   const pixelGridRef  = useRef<HTMLDivElement>(null)
   const spriteGameRef = useRef<number | null>(null)
@@ -570,37 +570,6 @@ export default function App() {
                 </div>
               </article>
 
-              <article
-                className={`pixel-card${hitCardIdx === 2 ? ' pixel-card--hit' : ''}`}
-                style={{ '--delay': '2' } as React.CSSProperties}
-                ref={(el) => { cardRefs.current[2] = el }}
-                data-href="#"
-              >
-                <div className="pixel-card-icon">&#128241;</div>
-                <h3 className="pixel-card-title">PROJECT_03</h3>
-                <p className="pixel-card-name">Mobile UI Kit</p>
-                <p className="pixel-card-stack">React Native · TS</p>
-                <div className="pixel-card-footer">
-                  <span className="pixel-tag">MOBILE</span>
-                  <a href="#" className="pixel-btn">PLAY &gt;</a>
-                </div>
-              </article>
-
-              <article
-                className={`pixel-card${hitCardIdx === 3 ? ' pixel-card--hit' : ''}`}
-                style={{ '--delay': '3' } as React.CSSProperties}
-                ref={(el) => { cardRefs.current[3] = el }}
-                data-href="#"
-              >
-                <div className="pixel-card-icon">&#128274;</div>
-                <h3 className="pixel-card-title">PROJECT_04</h3>
-                <p className="pixel-card-name">Auth Service</p>
-                <p className="pixel-card-stack">Node · JWT · MongoDB</p>
-                <div className="pixel-card-footer">
-                  <span className="pixel-tag">BACKEND</span>
-                  <a href="#" className="pixel-btn">PLAY &gt;</a>
-                </div>
-              </article>
             </div>
 
           </div>

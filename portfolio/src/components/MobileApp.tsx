@@ -231,27 +231,6 @@ export default function MobileApp() {
             </div>
           </article>
 
-          <article className="pixel-card m-card-tap" role="button" tabIndex={0}>
-            <div className="pixel-card-icon">&#128241;</div>
-            <h3 className="pixel-card-title">PROJECT_03</h3>
-            <p className="pixel-card-name">Mobile UI Kit</p>
-            <p className="pixel-card-stack">React Native · TS</p>
-            <div className="pixel-card-footer">
-              <span className="pixel-tag">MOBILE</span>
-              <span className="pixel-btn">PLAY &gt;</span>
-            </div>
-          </article>
-
-          <article className="pixel-card m-card-tap" role="button" tabIndex={0}>
-            <div className="pixel-card-icon">&#128274;</div>
-            <h3 className="pixel-card-title">PROJECT_04</h3>
-            <p className="pixel-card-name">Auth Service</p>
-            <p className="pixel-card-stack">Node · JWT · MongoDB</p>
-            <div className="pixel-card-footer">
-              <span className="pixel-tag">BACKEND</span>
-              <span className="pixel-btn">PLAY &gt;</span>
-            </div>
-          </article>
         </div>
 
         {/* Decorative sprite */}
